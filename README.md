@@ -25,22 +25,22 @@ g4f – GPT For Free: AI-based responses without API keys
 
 
 ⚙️ Setup Instructions :
-1. Clone the Repository
+1. Clone the Repository -
    https://github.com/ANUJMATHUR2005/AI-JARVIS-/new/main?filename=README.md
 
-2. Create a Virtual Environment
+2. Create a Virtual Environment -
    python -m venv venv
 
-3. Activate the Environment
+3. Activate the Environment -
    a. On Windows:
      venv\Scripts\activate
    b. On Mac/Linux:
      source venv/bin/activate
    
-4. Install Required Packages
+4. Install Required Packages -
    pip install -r requirements.txt
 
-5. Run the Assistant
+5. Run the Assistant -
    python main.py
 
 📦 Managing Dependencies :
