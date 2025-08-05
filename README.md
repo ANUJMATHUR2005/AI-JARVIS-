@@ -48,7 +48,7 @@ To generate a list of installed packages inside your virtual environment for sha
   pip freeze > requirements.txt
 
 👤 Author :
-Created by ANUJ MATHUR, a passionate Python learner and developer. Special thanks to AI (ChatGPT) for assisting in building, debugging, and enhancing this project 
+Created by ANUJ MATHUR, a passionate Python learner and developer.
 from start to finish.
 
 📝 License
