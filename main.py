@@ -12,6 +12,8 @@ import g4f
 from langdetect import detect
 import sys
 
+conversation_history = []
+
 # Recognizer and TTS Engine
 recognizer = sr.Recognizer()
 engine = pyttsx3.init()
@@ -40,6 +42,8 @@ def speak(text):
 
 # AI Chat with g4f
 def ai_chat(prompt):
+    global conversation_history
+
     try:
         lang = detect(prompt) if detect(prompt) in ['hi', 'en'] else 'en'
     except:
@@ -51,21 +55,31 @@ def ai_chat(prompt):
         "आप एक सहायक एआई हैं जो हमेशा हिंदी में उत्तर देते हैं।"
     )
 
+    # Only add system prompt once, at the start
+    if not conversation_history:
+        conversation_history.append({"role": "system", "content": system_prompt})
+
+    # Add user prompt to history
+    conversation_history.append({"role": "user", "content": prompt})
+
     try:
         response = g4f.ChatCompletion.create(
             model="gpt-4",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": prompt}
-            ]
+            messages=conversation_history
         )
-        response_text = str(response)
+
+        response_text = str(response).strip()
         print("🧠 GPT:", response_text)
+
+        # Add assistant response to history
+        conversation_history.append({"role": "assistant", "content": response_text})
+
         speak_gtts(response_text, lang)
 
     except Exception as e:
         print("⚠️ GPT Error:", e)
         speak_old("Sorry, I couldn't get an answer from AI." if lang == 'en' else "माफ़ कीजिए, उत्तर नहीं मिला।")
+
 
 # News Modules
 def India_news():
@@ -82,6 +96,9 @@ def India_news():
         news = h.get_text().strip()
         print(f"Headline {i}: {news}")
         speak(news)
+    speak("And many more...")
+    sys.exit()
+        
 
 def Rajasthan_news():
     speak("Fetching latest Rajasthan news from Times of India.")
@@ -97,6 +114,8 @@ def Rajasthan_news():
         news = h.get_text().strip()
         print(f"Headline {i}: {news}")
         speak(news)
+    speak("And many more...")
+    sys.exit()
 
 def Global_news():
     speak("Fetching latest Global news from Times of India.")
@@ -112,6 +131,8 @@ def Global_news():
         news = h.get_text().strip()
         print(f"Headline {i}: {news}")
         speak(news)
+    speak("And many more...")
+    sys.exit()
 
 def read_news():
     try:
@@ -132,19 +153,27 @@ def read_news():
     except Exception as e:
         print("Error while fetching news:", e)
         speak("Sorry, I couldn't fetch the news right now.")
+        
 
 def processCommand(c):
     c = c.lower()
+
+
+    if "reset chat" in c or "clear conversation" in c:
+        conversation_history.clear()
+        speak("conversation history cleared.")
+        return
+   
 
     if any(word in c for word in ["exit", "quit", "stop", "bye", "close jarvis", "shutdown"]):
         speak("Goodbye!")
         print("👋 Exiting Jarvis.")
         sys.exit()
-
+ 
     if "weather" in c or "temperature" in c:
         speak("Showing weather information for your location.")
         webbrowser.open("https://www.google.com/search?q=weather")
-        return
+        sys.exit()
 
     if c.startswith("play "):
         command = c[5:].strip()
@@ -158,24 +187,26 @@ def processCommand(c):
                     audio = recognizer.listen(source, timeout=6, phrase_time_limit=4)
                 user_response = recognizer.recognize_google(audio).lower()
                 print(f"You said: {user_response}")
-                if "yes" in user_response:
+                
+                if "no" in user_response:
+                    speak("Okay, cancelling the command.")
+                    sys.exit()
+                elif "yes" in user_response:
                     speak(f"Playing {song} on YouTube.")
                     pywhatkit.playonyt(song)
                     sys.exit()
-                elif "no" in user_response:
-                    speak("Okay, cancelling the command.")
-                    return
+                    
                 else:
                     speak("Invalid response.")
-                    return
+                    sys.exit()
             except Exception as e:
                 print("Voice recognition failed:", e)
                 speak("Sorry, something went wrong while listening.")
-                return
+                sys.exit()
         else:
             speak(f"Playing {song} on YouTube.")
             pywhatkit.playonyt(song)
-            return
+            sys.exit()
 
     websites = {
         "google": "https://google.com",
@@ -235,13 +266,14 @@ if __name__ == "__main__":
                     break
 
                 processCommand(command)
+
                 
         except sr.UnknownValueError:
-            print("🤔 Didn't catch that.")
+            print("Didn't catch that.")
             speak("I didn't catch that. Could you please repeat?")
         except sr.RequestError as e:
-            print("🔌 Could not request results from Google:", e)
+            print("Could not request results from Google:", e)
             speak("Sorry, I couldn't connect to the internet.")
         except Exception as e:
-            print("⚠️ Unexpected error:", e)
+            print("Unexpected error:", e)
             speak("Something went wrong. Please try again.")
